@@ -1,45 +1,33 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.firefox.service import Service
+import scrapy
 
-options = Options()
-options.headless = True
+class WebCrawler(scrapy.Spider):
+    name = "web_crawler"
+    allowed_domains = ["example.com"]  
 
-driver_path = '/usr/local/bin/geckodriver' 
+    def start_requests(self):
+        target_url = "http://example.com"
+        yield scrapy.Request(url=target_url, callback=self.parse)
 
-service = Service(driver_path)
-
-driver = webdriver.Firefox(service=service, options=options)
-
-def crawl_page(url):
-    driver.get(url)
-    
-    links = driver.find_elements(By.TAG_NAME, 'a')
-    print("\n--- Links Found ---")
-    for link in links:
-        href = link.get_attribute('href')
-        print(f"Link: {href}")
-    
-    forms = driver.find_elements(By.TAG_NAME, 'form')
-    print("\n--- Forms Found ---")
-    for form in forms:
-        action = form.get_attribute('action')
-        method = form.get_attribute('method')
-        print(f"Form action: {action}, method: {method}")
+    def parse(self, response):
+        links = response.css('a::attr(href)').getall()
+        print("\n--- Links Found ---")
+        for link in links:
+            print(f"Link: {link}")
         
-        inputs = form.find_elements(By.TAG_NAME, 'input')
-        for input_field in inputs:
-            input_name = input_field.get_attribute('name')
-            input_type = input_field.get_attribute('type')
-            print(f"Input name: {input_name}, type: {input_type}")
+        forms = response.css('form')
+        print("\n--- Forms Found ---")
+        for form in forms:
+            action = form.css('::attr(action)').get()
+            method = form.css('::attr(method)').get()
+            print(f"Form action: {action}, method: {method}")
+            
+            inputs = form.css('input')
+            for input_field in inputs:
+                input_name = input_field.css('::attr(name)').get()
+                input_type = input_field.css('::attr(type)').get()
+                print(f"Input name: {input_name}, type: {input_type}")
 
-    hidden_elements = driver.find_elements(By.XPATH, "//input[@type='hidden']")
-    print("\n--- Hidden Elements Found ---")
-    for hidden in hidden_elements:
-        print(f"Hidden field: {hidden.get_attribute('name')}")
-
-target_url = "http://example.com"
-crawl_page(target_url)
-
-driver.quit()
+        hidden_elements = response.css("input[type='hidden']")
+        print("\n--- Hidden Elements Found ---")
+        for hidden in hidden_elements:
+            print(f"Hidden field: {hidden.css('::attr(name)').get()}")
