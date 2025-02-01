@@ -1,17 +1,18 @@
+import os  
 import subprocess
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
-from crawler import WebCrawler 
+from crawler import WebCrawler  
 
 def run_scrapy_crawler(target_url):
     process = CrawlerProcess(get_project_settings())
     WebCrawler.start_urls = [target_url]  
     
     process.crawl(WebCrawler)
-    process.start()  
+    process.start() 
 
 def sql_injection_test(url):
-    print(f"Running SQL Injection test for {url}...")
+   print(f"Running SQL Injection test for {url}...")
     return "No SQL Injection vulnerability detected."
 
 def xss_test(url):
@@ -63,7 +64,7 @@ def main_menu():
     if choice == "1":
         target_url = input("Enter the target URL (e.g., http://example.com): ")
         run_scrapy_crawler(target_url) 
-        run_security_tests(target_url) 
+        run_security_tests(target_url)  
     elif choice == "2":
         update_tool()  
     else:
