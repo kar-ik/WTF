@@ -18,7 +18,7 @@ def safe_request(url, params=None):
     """Helper function for making requests with error handling and timeouts."""
     try:
         response = requests.get(url, params=params, headers=headers, timeout=10)
-        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+        response.raise_for_status()  
         return response
     except requests.RequestException as e:
         print(colored(f"Error during request to {url}: {str(e)}", "red"))
