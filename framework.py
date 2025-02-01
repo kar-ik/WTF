@@ -12,7 +12,7 @@ def run_scrapy_crawler(target_url):
     process.start() 
 
 def sql_injection_test(url):
-   print(f"Running SQL Injection test for {url}...")
+    print(f"Running SQL Injection test for {url}...")
     return "No SQL Injection vulnerability detected."
 
 def xss_test(url):
