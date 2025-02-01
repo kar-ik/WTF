@@ -2,32 +2,28 @@ import scrapy
 
 class WebCrawler(scrapy.Spider):
     name = "web_crawler"
-    allowed_domains = ["example.com"]  
-
-    def start_requests(self):
-        target_url = "http://example.com"
-        yield scrapy.Request(url=target_url, callback=self.parse)
+    start_urls = ["http://example.com"] 
 
     def parse(self, response):
-        links = response.css('a::attr(href)').getall()
+        links = response.xpath("//a/@href").getall()
         print("\n--- Links Found ---")
         for link in links:
             print(f"Link: {link}")
         
-        forms = response.css('form')
+        forms = response.xpath("//form")
         print("\n--- Forms Found ---")
         for form in forms:
-            action = form.css('::attr(action)').get()
-            method = form.css('::attr(method)').get()
+            action = form.xpath("@action").get()
+            method = form.xpath("@method").get()
             print(f"Form action: {action}, method: {method}")
             
-            inputs = form.css('input')
+            inputs = form.xpath(".//input")
             for input_field in inputs:
-                input_name = input_field.css('::attr(name)').get()
-                input_type = input_field.css('::attr(type)').get()
+                input_name = input_field.xpath("@name").get()
+                input_type = input_field.xpath("@type").get()
                 print(f"Input name: {input_name}, type: {input_type}")
-
-        hidden_elements = response.css("input[type='hidden']")
+        
+        hidden_elements = response.xpath("//input[@type='hidden']")
         print("\n--- Hidden Elements Found ---")
         for hidden in hidden_elements:
-            print(f"Hidden field: {hidden.css('::attr(name)').get()}")
+            print(f"Hidden field: {hidden.xpath('@name').get()}")
