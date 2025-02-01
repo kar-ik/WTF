@@ -14,15 +14,23 @@ crawl_page(target_url)
 REPORT_DIR = "reports"
 os.makedirs(REPORT_DIR, exist_ok=True)
 
+def safe_request(url, params=None):
+    """Helper function for making requests with error handling and timeouts."""
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=10)
+        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+        return response
+    except requests.RequestException as e:
+        print(colored(f"Error during request to {url}: {str(e)}", "red"))
+        return None
+
 def sql_injection_test(url):
     payload = "' OR '1'='1"
-    try:
-        response = requests.get(url, params={"id": payload}, headers=headers)
+    response = safe_request(url, params={"id": payload})
+    if response:
         if "mysql" in response.text.lower() or "syntax" in response.text.lower():
             return True, "SQL Injection vulnerability detected!"
-        return False, "No SQL Injection vulnerability detected."
-    except Exception as e:
-        return False, f"Error: {str(e)}"
+    return False, "No SQL Injection vulnerability detected."
 
 def xss_test(url):
     xss_payloads = [
@@ -31,17 +39,14 @@ def xss_test(url):
         "'\"><script>alert('XSS')</script>"
     ]
     for payload in xss_payloads:
-        try:
-            response = requests.get(url + payload, headers=headers)
-            if payload in response.text:
-                return True, "XSS vulnerability detected!"
-        except Exception as e:
-            return False, f"Error: {str(e)}"
+        response = safe_request(url + payload)
+        if response and payload in response.text:
+            return True, "XSS vulnerability detected!"
     return False, "No XSS vulnerability detected."
 
 def csrf_test(url):
-    try:
-        response = requests.get(url, headers=headers)
+    response = safe_request(url)
+    if response:
         soup = BeautifulSoup(response.text, 'lxml')
         forms = soup.find_all('form')
         csrf_tokens = ["csrf_token", "csrfmiddlewaretoken", "authenticity_token"]
@@ -49,12 +54,11 @@ def csrf_test(url):
             any(form.find('input', {'name': token}) for token in csrf_tokens) for form in forms
         )
         return (False, "CSRF protection found.") if csrf_protected else (True, "Potential CSRF vulnerability detected!")
-    except Exception as e:
-        return False, f"Error: {str(e)}"
+    return False, "Error checking CSRF vulnerability."
 
 def insecure_headers_test(url):
-    try:
-        response = requests.get(url, headers=headers)
+    response = safe_request(url)
+    if response:
         headers_list = response.headers
         insecure_headers = []
         if "X-Frame-Options" not in headers_list:
@@ -62,25 +66,21 @@ def insecure_headers_test(url):
         if "Content-Security-Policy" not in headers_list:
             insecure_headers.append("Content-Security-Policy missing")
         return (True, ", ".join(insecure_headers)) if insecure_headers else (False, "No insecure headers detected.")
-    except Exception as e:
-        return False, f"Error: {str(e)}"
+    return False, "Error checking headers."
 
 def directory_bruteforce(url):
     directories = ['admin', 'login', 'dashboard', 'config', 'uploads']
     found_directories = []
     for directory in directories:
         test_url = f"{url}/{directory}/"
-        try:
-            response = requests.get(test_url, headers=headers)
-            if response.status_code == 200:
-                found_directories.append(test_url)
-        except Exception:
-            pass
+        response = safe_request(test_url)
+        if response and response.status_code == 200:
+            found_directories.append(test_url)
     return (True, f"Accessible directories: {', '.join(found_directories)}") if found_directories else (False, "No accessible directories found.")
 
 def generate_report(test_results, target):
     sanitized_target = re.sub(r'[^a-zA-Z0-9]', '_', target)
-    report_path = f"{REPORT_DIR}/report_{sanitized_target}.html"
+    report_path = f"{REPORT_DIR}/report_{sanitized_target}_{int(time.time())}.html"
     
     with open(report_path, "w") as report:
         report.write(f"<html><head><title>Security Test Report for {target}</title></head><body>")
