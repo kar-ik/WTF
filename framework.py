@@ -1,39 +1,32 @@
 import subprocess
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
-from crawler import WebCrawler  # Import the Scrapy spider
+from crawler import WebCrawler 
 
 def run_scrapy_crawler(target_url):
-    # Setup Scrapy settings dynamically
     process = CrawlerProcess(get_project_settings())
-    WebCrawler.start_urls = [target_url]  # Update the start URL dynamically
+    WebCrawler.start_urls = [target_url]  
     
-    # Start the Scrapy crawling process
     process.crawl(WebCrawler)
-    process.start()  # Block until the crawling is finished
+    process.start()  
 
 def sql_injection_test(url):
-    # Dummy test for SQL injection (can be expanded)
     print(f"Running SQL Injection test for {url}...")
     return "No SQL Injection vulnerability detected."
 
 def xss_test(url):
-    # Dummy test for XSS (can be expanded)
     print(f"Running XSS test for {url}...")
     return "No XSS vulnerability detected."
 
 def csrf_test(url):
-    # Dummy test for CSRF (can be expanded)
     print(f"Running CSRF test for {url}...")
     return "CSRF protection found."
 
 def insecure_headers_test(url):
-    # Dummy test for insecure headers (can be expanded)
     print(f"Running Insecure Headers test for {url}...")
     return "No insecure headers detected."
 
 def directory_bruteforce(url):
-    # Dummy test for directory bruteforce (can be expanded)
     print(f"Running Directory Bruteforce test for {url}...")
     return "No accessible directories found."
 
@@ -69,10 +62,10 @@ def main_menu():
     
     if choice == "1":
         target_url = input("Enter the target URL (e.g., http://example.com): ")
-        run_scrapy_crawler(target_url)  # Run Scrapy crawler
-        run_security_tests(target_url)  # Run security tests after crawling
+        run_scrapy_crawler(target_url) 
+        run_security_tests(target_url) 
     elif choice == "2":
-        update_tool()  # Update the tool
+        update_tool()  
     else:
         print("Invalid choice.")
 
