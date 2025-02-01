@@ -1,13 +1,16 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
 
 options = Options()
 options.headless = True
 
-driver_path = '/usr/local/bin/geckodriver'  
+driver_path = '/usr/local/bin/geckodriver' 
 
-driver = webdriver.Firefox(options=options, executable_path=driver_path)
+service = Service(driver_path)
+
+driver = webdriver.Firefox(service=service, options=options)
 
 def crawl_page(url):
     driver.get(url)
