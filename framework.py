@@ -1,43 +1,44 @@
-import os  
+import os
+import re
+import requests
 import subprocess
-from scrapy.crawler import CrawlerProcess
-from scrapy.utils.project import get_project_settings
-from crawler import WebCrawler  
+from bs4 import BeautifulSoup
+from termcolor import colored
+import shodan
 
-def run_scrapy_crawler(target_url):
-    process = CrawlerProcess(get_project_settings())
-    WebCrawler.start_urls = [target_url]  
-    
-    process.crawl(WebCrawler)
-    process.start() 
+headers = {"User-Agent": "Mozilla/5.0"}
+REPORT_DIR = "reports"
+os.makedirs(REPORT_DIR, exist_ok=True)
 
-def sql_injection_test(url):
-    print(f"Running SQL Injection test for {url}...")
-    return "No SQL Injection vulnerability detected."
+SHODAN_API_KEY = "shodan_api_key_here"  
 
-def xss_test(url):
-    print(f"Running XSS test for {url}...")
-    return "No XSS vulnerability detected."
+def run_amass(domain):
+    print(colored(f"Running Amass for subdomain enumeration on {domain}", "blue"))
+    output_file = f"{REPORT_DIR}/amass_{domain}.txt"
+    subprocess.run(["amass", "enum", "-d", domain, "-o", output_file])
+    with open(output_file, "r") as file:
+        subdomains = file.readlines()
+    print(colored(f"Found {len(subdomains)} subdomains:", "green"))
+    for sub in subdomains:
+        print(sub.strip())
 
-def csrf_test(url):
-    print(f"Running CSRF test for {url}...")
-    return "CSRF protection found."
+def shodan_scan(target):
+    try:
+        api = shodan.Shodan(SHODAN_API_KEY)
+        result = api.host(target)
+        print(colored(f"Shodan results for {target}:", "blue"))
+        print(f"IP: {result['ip_str']}")
+        print(f"Organization: {result.get('org', 'N/A')}")
+        print(f"Operating System: {result.get('os', 'N/A')}")
+        for item in result['data']:
+            print(f"Port: {item['port']}, Service: {item.get('product', 'Unknown')}")
+    except shodan.APIError as e:
+        print(colored(f"Shodan API Error: {e}", "red"))
 
-def insecure_headers_test(url):
-    print(f"Running Insecure Headers test for {url}...")
-    return "No insecure headers detected."
-
-def directory_bruteforce(url):
-    print(f"Running Directory Bruteforce test for {url}...")
-    return "No accessible directories found."
-
-def run_security_tests(url):
-    print(f"Running security tests for {url}...\n")
-    print(sql_injection_test(url))
-    print(xss_test(url))
-    print(csrf_test(url))
-    print(insecure_headers_test(url))
-    print(directory_bruteforce(url))
+def run_tests(target):
+    print(colored(f"Running security tests for {target}", "blue"))
+    run_amass(target)
+    shodan_scan(target)
 
 def update_tool():
     try:
@@ -60,13 +61,11 @@ def main_menu():
     print("1. Run security tests")
     print("2. Update tool")
     choice = input("Enter your choice: ")
-    
     if choice == "1":
-        target_url = input("Enter the target URL (e.g., http://example.com): ")
-        run_scrapy_crawler(target_url) 
-        run_security_tests(target_url)  
+        target_url = input("Enter the target domain (e.g., example.com): ")
+        run_tests(target_url)
     elif choice == "2":
-        update_tool()  
+        update_tool()
     else:
         print("Invalid choice.")
 
