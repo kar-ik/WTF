@@ -5,6 +5,7 @@ import subprocess
 from bs4 import BeautifulSoup
 from termcolor import colored
 import shodan
+import unittest
 
 headers = {"User-Agent": "Mozilla/5.0"}
 REPORT_DIR = "reports"
@@ -40,6 +41,13 @@ def run_tests(target):
     run_amass(target)
     shodan_scan(target)
 
+    print(colored("Running unit tests...", "blue"))
+    test_suite = unittest.defaultTestLoader.discover(start_dir="tests", pattern="test_cases.py")  
+    test_result = unittest.TextTestRunner().run(test_suite)
+    if test_result.wasSuccessful():
+        print(colored("All tests passed!", "green"))
+    else:
+        print(colored(f"{len(test_result.errors)} tests failed!", "red"))
 def update_tool():
     try:
         if not os.path.exists('.git'):
