@@ -12,6 +12,7 @@ headers = {"User-Agent": "Mozilla/5.0"}
 REPORT_DIR = "reports"
 os.makedirs(REPORT_DIR, exist_ok=True)
 
+load_dotenv()  
 SHODAN_API_KEY = os.getenv("SHODAN_API_KEY")
 
 if not SHODAN_API_KEY:
