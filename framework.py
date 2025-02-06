@@ -11,7 +11,14 @@ headers = {"User-Agent": "Mozilla/5.0"}
 REPORT_DIR = "reports"
 os.makedirs(REPORT_DIR, exist_ok=True)
 
-SHODAN_API_KEY = "shodan_api_key_here"  
+SHODAN_API_KEY = os.getenv("SHODAN_API_KEY")
+
+if not SHODAN_API_KEY:
+    print("Error: Shodan API key not found. Set it as an environment variable or GitHub Secret.")
+    exit(1)
+
+api = shodan.Shodan(SHODAN_API_KEY)
+print("Shodan API Key Loaded Successfully!")  
 
 def run_amass(domain):
     print(colored(f"Running Amass for subdomain enumeration on {domain}", "blue"))
