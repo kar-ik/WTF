@@ -4,6 +4,7 @@ import requests
 import subprocess
 from bs4 import BeautifulSoup
 from termcolor import colored
+from dotenv import load_dotenv
 import shodan
 import unittest
 
