@@ -4,22 +4,11 @@ import requests
 import subprocess
 from bs4 import BeautifulSoup
 from termcolor import colored
-from dotenv import load_dotenv
-import shodan
 import unittest
 
 headers = {"User-Agent": "Mozilla/5.0"}
 REPORT_DIR = "reports"
 os.makedirs(REPORT_DIR, exist_ok=True)
-
-load_dotenv()  
-SHODAN_API_KEY = os.getenv("SHODAN_API_KEY")
-
-if not SHODAN_API_KEY:
-    print("Error: Shodan API key not found. Set it as an environment variable or GitHub Secret.")
-    exit(1)
-
-api = shodan.Shodan(SHODAN_API_KEY)  
 
 def run_amass(domain):
     print(colored(f"Running Amass for subdomain enumeration on {domain}", "blue"))
@@ -39,29 +28,6 @@ def run_amass(domain):
     return filtered_subdomains  
 
 import ipaddress
-
-def shodan_scan(target):
-    try:
-        print(colored(f"Scanning {target} on Shodan...", "blue"))
-        result = api.host(target)
-
-        target_ip = result['ip_str']
-        target_asn = result.get('asn', '')
-
-        if target_asn and not target_asn.startswith("AS"):
-            print(colored(f"Skipping unrelated ASN {target_asn}", "yellow"))
-            return
-
-        print(colored(f"Shodan results for {target}:", "blue"))
-        print(f"IP: {target_ip}")
-        print(f"Organization: {result.get('org', 'N/A')}")
-        print(f"Operating System: {result.get('os', 'N/A')}")
-
-        for item in result['data']:
-            print(f"Port: {item['port']}, Service: {item.get('product', 'Unknown')}")
-
-    except shodan.APIError as e:
-        print(colored(f"Shodan API Error: {e}", "red"))
 
 def run_tests(target):
     print(colored(f"Running security tests for {target}", "blue"))
