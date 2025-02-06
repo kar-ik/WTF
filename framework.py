@@ -32,8 +32,7 @@ import ipaddress
 def run_tests(target):
     print(colored(f"Running security tests for {target}", "blue"))
     run_amass(target)
-    shodan_scan(target)
-
+    
     print(colored("Running unit tests...", "blue"))
     test_suite = unittest.defaultTestLoader.discover(start_dir="tests", pattern="test_cases.py")  
     test_result = unittest.TextTestRunner().run(test_suite)
