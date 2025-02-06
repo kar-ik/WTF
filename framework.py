@@ -24,29 +24,36 @@ api = shodan.Shodan(SHODAN_API_KEY)
 def run_amass(domain):
     print(colored(f"Running Amass for subdomain enumeration on {domain}", "blue"))
     output_file = f"{REPORT_DIR}/amass_{domain}.txt"
-    
+
     subprocess.run(["amass", "enum", "-d", domain, "-o", output_file])
 
     with open(output_file, "r") as file:
-        subdomains = [line.strip() for line in file.readlines() if line.strip().endswith(f".{domain}") or line.strip() == domain]
+        subdomains = [line.strip() for line in file.readlines()]
 
-    print(colored(f"Found {len(subdomains)} subdomains:", "green"))
-    for sub in subdomains:
+    filtered_subdomains = [sub for sub in subdomains if re.fullmatch(rf"[a-zA-Z0-9.-]+\.{re.escape(domain)}", sub)]
+
+    print(colored(f"Filtered {len(filtered_subdomains)} valid subdomains:", "green"))
+    for sub in filtered_subdomains:
         print(sub)
-    
-    return subdomains  
+
+    return filtered_subdomains  
+
+import ipaddress
 
 def shodan_scan(target):
     try:
         print(colored(f"Scanning {target} on Shodan...", "blue"))
         result = api.host(target)
 
-        if target not in result['ip_str']: 
-            print(colored(f"Skipping {result['ip_str']} (not in scope)", "yellow"))
+        target_ip = result['ip_str']
+        target_asn = result.get('asn', '')
+
+        if target_asn and not target_asn.startswith("AS"):
+            print(colored(f"Skipping unrelated ASN {target_asn}", "yellow"))
             return
 
         print(colored(f"Shodan results for {target}:", "blue"))
-        print(f"IP: {result['ip_str']}")
+        print(f"IP: {target_ip}")
         print(f"Organization: {result.get('org', 'N/A')}")
         print(f"Operating System: {result.get('os', 'N/A')}")
 
