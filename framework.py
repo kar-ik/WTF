@@ -28,18 +28,20 @@ def run_amass(domain):
     subprocess.run(["amass", "enum", "-d", domain, "-o", output_file])
 
     with open(output_file, "r") as file:
-        subdomains = [line.strip() for line in file.readlines() if line.strip().endswith(domain)]  
+        subdomains = [line.strip() for line in file.readlines() if line.strip().endswith(f".{domain}") or line.strip() == domain]
 
     print(colored(f"Found {len(subdomains)} subdomains:", "green"))
     for sub in subdomains:
         print(sub)
-
+    
+    return subdomains  
 
 def shodan_scan(target):
     try:
+        print(colored(f"Scanning {target} on Shodan...", "blue"))
         result = api.host(target)
 
-        if not target.endswith(result['ip_str']):
+        if target not in result['ip_str']: 
             print(colored(f"Skipping {result['ip_str']} (not in scope)", "yellow"))
             return
 
@@ -47,7 +49,7 @@ def shodan_scan(target):
         print(f"IP: {result['ip_str']}")
         print(f"Organization: {result.get('org', 'N/A')}")
         print(f"Operating System: {result.get('os', 'N/A')}")
-        
+
         for item in result['data']:
             print(f"Port: {item['port']}, Service: {item.get('product', 'Unknown')}")
 
