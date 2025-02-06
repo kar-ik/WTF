@@ -24,23 +24,33 @@ api = shodan.Shodan(SHODAN_API_KEY)
 def run_amass(domain):
     print(colored(f"Running Amass for subdomain enumeration on {domain}", "blue"))
     output_file = f"{REPORT_DIR}/amass_{domain}.txt"
+    
     subprocess.run(["amass", "enum", "-d", domain, "-o", output_file])
+
     with open(output_file, "r") as file:
-        subdomains = file.readlines()
+        subdomains = [line.strip() for line in file.readlines() if line.strip().endswith(domain)]  
+
     print(colored(f"Found {len(subdomains)} subdomains:", "green"))
     for sub in subdomains:
-        print(sub.strip())
+        print(sub)
+
 
 def shodan_scan(target):
     try:
-        api = shodan.Shodan(SHODAN_API_KEY)
         result = api.host(target)
+
+        if not target.endswith(result['ip_str']):
+            print(colored(f"Skipping {result['ip_str']} (not in scope)", "yellow"))
+            return
+
         print(colored(f"Shodan results for {target}:", "blue"))
         print(f"IP: {result['ip_str']}")
         print(f"Organization: {result.get('org', 'N/A')}")
         print(f"Operating System: {result.get('os', 'N/A')}")
+        
         for item in result['data']:
             print(f"Port: {item['port']}, Service: {item.get('product', 'Unknown')}")
+
     except shodan.APIError as e:
         print(colored(f"Shodan API Error: {e}", "red"))
 
