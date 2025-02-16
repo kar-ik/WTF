@@ -2,26 +2,48 @@ import os
 import re
 import requests
 import subprocess
-from bs4 import BeautifulSoup
-from termcolor import colored
-from dotenv import load_dotenv
+import ipaddress
 import shodan
 import unittest
+from bs4 import BeautifulSoup
+from termcolor import colored
+
+def print_banner():
+    banner = r"""
+ __    __        __    __ 
+|  \  /  \      |  \  /  \
+| $$ /  $$      | $$ /  $$
+| $$/  $$       | $$/  $$ 
+| $$  $$        | $$  $$  
+| $$$$$\        | $$$$$\  
+| $$ \$$\       | $$ \$$\ 
+| $$  \$$\      | $$  \$$\
+ \$$   \$$       \$$   \$$
+ 
+                  Web Application Security Testing Framework
+                      (Built for Ethical Hacking & Pentesting)
+    """
+    print(colored(banner, "cyan"))
 
 headers = {"User-Agent": "Mozilla/5.0"}
 REPORT_DIR = "reports"
 os.makedirs(REPORT_DIR, exist_ok=True)
 
-load_dotenv()  
 SHODAN_API_KEY = os.getenv("SHODAN_API_KEY")
 
 if not SHODAN_API_KEY:
     print("Error: Shodan API key not found. Set it as an environment variable or GitHub Secret.")
     exit(1)
 
-api = shodan.Shodan(SHODAN_API_KEY)  
+api = shodan.Shodan(SHODAN_API_KEY)
+print(colored("Shodan API Key Loaded Successfully!", "green"))
+
+def is_valid_subdomain(subdomain, domain):
+    """ Ensure subdomains belong to the target domain. """
+    return re.fullmatch(rf"[a-zA-Z0-9.-]+\.{re.escape(domain)}", subdomain)
 
 def run_amass(domain):
+    """ Run Amass for subdomain enumeration, ensuring only target subdomains are included. """
     print(colored(f"Running Amass for subdomain enumeration on {domain}", "blue"))
     output_file = f"{REPORT_DIR}/amass_{domain}.txt"
 
@@ -30,7 +52,7 @@ def run_amass(domain):
     with open(output_file, "r") as file:
         subdomains = [line.strip() for line in file.readlines()]
 
-    filtered_subdomains = [sub for sub in subdomains if re.fullmatch(rf"[a-zA-Z0-9.-]+\.{re.escape(domain)}", sub)]
+    filtered_subdomains = [sub for sub in subdomains if is_valid_subdomain(sub, domain)]
 
     print(colored(f"Filtered {len(filtered_subdomains)} valid subdomains:", "green"))
     for sub in filtered_subdomains:
@@ -38,9 +60,15 @@ def run_amass(domain):
 
     return filtered_subdomains  
 
-import ipaddress
+def is_in_target_range(ip, target_cidr):
+    """ Check if an IP address belongs to the target's IP range. """
+    try:
+        return ipaddress.ip_address(ip) in ipaddress.ip_network(target_cidr)
+    except ValueError:
+        return False
 
 def shodan_scan(target):
+    """ Perform a Shodan scan and filter results to only show target-related data. """
     try:
         print(colored(f"Scanning {target} on Shodan...", "blue"))
         result = api.host(target)
@@ -50,6 +78,12 @@ def shodan_scan(target):
 
         if target_asn and not target_asn.startswith("AS"):
             print(colored(f"Skipping unrelated ASN {target_asn}", "yellow"))
+            return
+
+        TARGET_IP_RANGE = "192.168.1.0/1"  
+
+        if not is_in_target_range(target_ip, TARGET_IP_RANGE):
+            print(colored(f"Skipping {target_ip} (not in target's range)", "yellow"))
             return
 
         print(colored(f"Shodan results for {target}:", "blue"))
@@ -64,6 +98,7 @@ def shodan_scan(target):
         print(colored(f"Shodan API Error: {e}", "red"))
 
 def run_tests(target):
+    """ Run all security tests on the given target. """
     print(colored(f"Running security tests for {target}", "blue"))
     run_amass(target)
     shodan_scan(target)
@@ -75,7 +110,9 @@ def run_tests(target):
         print(colored("All tests passed!", "green"))
     else:
         print(colored(f"{len(test_result.errors)} tests failed!", "red"))
+
 def update_tool():
+    """ Check for updates and pull the latest code if available. """
     try:
         if not os.path.exists('.git'):
             print("This tool is not a Git repository. Please clone it from the repository.")
@@ -92,17 +129,20 @@ def update_tool():
         print(f"An error occurred during the update process: {str(e)}")
 
 def main_menu():
-    print("Security Testing Tool")
-    print("1. Run security tests")
-    print("2. Update tool")
-    choice = input("Enter your choice: ")
+    """ Display the main menu for the security testing tool. """
+    print_banner()
+    print(colored("\n[+] Web Application Security Testing Framework [+]\n", "yellow"))
+    print(colored("1. Run security tests", "green"))
+    print(colored("2. Update tool", "green"))
+
+    choice = input(colored("\nEnter your choice: ", "cyan"))
     if choice == "1":
-        target_url = input("Enter the target domain (e.g., example.com): ")
+        target_url = input(colored("Enter the target domain (e.g., example.com): ", "cyan"))
         run_tests(target_url)
     elif choice == "2":
         update_tool()
     else:
-        print("Invalid choice.")
+        print(colored("Invalid choice.", "red"))
 
 if __name__ == "__main__":
     main_menu()
