@@ -132,19 +132,25 @@ def update_tool():
 
 def main_menu():
     """ Display the main menu for the security testing tool. """
-    print_banner()
-    print(colored("\n[+] Web Application Security Testing Framework [+]\n", "yellow"))
-    print(colored("1. Run security tests", "green"))
-    print(colored("2. Update tool", "green"))
+    while True:
+        print_banner()
+        print(colored("\n[+] Web Application Security Testing Framework [+]\n", "yellow"))
+        print(colored("1. Run security tests", "green"))
+        print(colored("2. Update tool", "green"))
+        print(colored("3. Exit", "red"))
 
-    choice = input(colored("\nEnter your choice: ", "cyan"))
-    if choice == "1":
-        target_url = input(colored("Enter the target domain (e.g., example.com): ", "cyan"))
-        run_tests(target_url)
-    elif choice == "2":
-        update_tool()
-    else:
-        print(colored("Invalid choice.", "red"))
+        choice = input(colored("\nEnter your choice: ", "cyan"))
+        if choice == "1":
+            target_url = input(colored("Enter the target domain (e.g., example.com): ", "cyan"))
+            run_tests(target_url)
+        elif choice == "2":
+            update_tool()
+            input(colored("\nPress Enter to return to the main menu...", "cyan"))
+        elif choice == "3":
+            print(colored("Exiting the tool. Goodbye!", "red"))
+            break  
+        else:
+            print(colored("Invalid choice. Please try again.", "red"))
 
 if __name__ == "__main__":
     main_menu()
