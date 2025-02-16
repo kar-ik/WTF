@@ -7,6 +7,8 @@ import shodan
 import unittest
 from bs4 import BeautifulSoup
 from termcolor import colored
+from dotenv import load_dotenv
+load_dotenv()
 
 def print_banner():
     banner = r"""
