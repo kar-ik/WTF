@@ -12,16 +12,14 @@ load_dotenv()
 
 def print_banner():
     banner = r"""
- __    __        __    __ 
-|  \  /  \      |  \  /  \
-| $$ /  $$      | $$ /  $$
-| $$/  $$       | $$/  $$ 
-| $$  $$        | $$  $$  
-| $$$$$\        | $$$$$\  
-| $$ \$$\       | $$ \$$\ 
-| $$  \$$\      | $$  \$$\
- \$$   \$$       \$$   \$$
- 
+
+$$       $$        $$   $$$$$$$$$$$$   $$$$$$$$
+ $$     $$ $$     $$         $$        $$  
+  $$   $$   $$   $$          $$        $$$$$$
+   $$ $$     $$ $$           $$        $$
+    $$$       $$$            $$        $$
+                          
+     
                   Web Application Security Testing Framework
                       (Built for Ethical Hacking & Pentesting)
     """
