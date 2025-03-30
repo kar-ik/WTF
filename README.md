@@ -21,7 +21,7 @@ This Python-based framework automates the security testing of web applications f
 
 2. Install dependencies:
     ```bash
-    pip install -r requirements.txt
+    apt install python3-scrapy
     ```
 
 3. Run the framework:
