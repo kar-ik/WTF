@@ -36,6 +36,7 @@ if SHODAN_API_KEY:
     print(colored("Shodan API Key Loaded Successfully!", "green"))
 else:
     print(colored("Skipping Shodan scan (API key not provided)", "yellow"))
+    exit(1)    
 
 def is_valid_subdomain(subdomain, domain):
     return re.fullmatch(rf"[a-zA-Z0-9.-]+\.{re.escape(domain)}", subdomain)
