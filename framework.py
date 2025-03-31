@@ -34,7 +34,6 @@ SHODAN_API_KEY = os.getenv("SHODAN_API_KEY")
 if SHODAN_API_KEY:
     api = shodan.Shodan(SHODAN_API_KEY)
     print(colored("Shodan API Key Loaded Successfully!", "green"))
-    print(f"Shodan API Key: {SHODAN_API_KEY}")
 else:
     print(colored("Skipping Shodan scan (API key not provided)", "yellow"))
     exit(1)    
