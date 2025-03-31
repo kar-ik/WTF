@@ -106,20 +106,69 @@ def run_tests(target):
     else:
         print(colored(f"{len(test_result.errors)} tests failed!", "red"))
         
-def sql_injection_test(target):
-    return False, "No SQL Injection vulnerability detected"
+def sql_injection_test(url):
+    try:
+        response = requests.get(url + "'")
+        
+        if "error in your SQL syntax" in response.text:
+            return True, "SQL Injection vulnerability detected"
+        else:
+            return False, "No SQL Injection vulnerability detected"
+    except requests.exceptions.RequestException as e:
+        return False, f"Request failed: {e}"
 
-def xss_test(target):
-    return False, "No XSS vulnerability detected"
+def xss_test(url):
+    payload = "<script>alert('XSS')</script>"
+    try:
+        response = requests.get(url + payload)
+        
+        if payload in response.text:
+            return True, "XSS vulnerability detected"
+        else:
+            return False, "No XSS vulnerability detected"
+    except requests.exceptions.RequestException as e:
+        return False, f"Request failed: {e}"
 
-def csrf_test(target):
-    return False, "CSRF protection found"
+def csrf_test(url):
+    try:
+        response = requests.get(url)
+        
+        if '<input type="hidden" name="csrf_token"' not in response.text:
+            return True, "Potential CSRF vulnerability detected!"
+        else:
+            return False, "CSRF protection found"
+    except requests.exceptions.RequestException as e:
+        return False, f"Request failed: {e}"
 
-def insecure_headers_test(target):
-    return False, "No insecure headers detected"
+def insecure_headers_test(url):
+    try:
+        response = requests.get(url)
+        
+        if "X-Frame-Options" not in response.headers:
+            return True, "X-Frame-Options missing"
+        if "Content-Security-Policy" not in response.headers:
+            return True, "Content-Security-Policy missing"
+        
+        return False, "No insecure headers detected"
+    except requests.exceptions.RequestException as e:
+        return False, f"Request failed: {e}"
 
-def directory_bruteforce(target):
-    return False, "No accessible directories found"
+def directory_bruteforce(url):
+    directories = ['/admin', '/login', '/uploads', '/config']
+    accessible_directories = []
+    
+    for directory in directories:
+        try:
+            response = requests.get(url + directory)
+            if response.status_code == 200:
+                accessible_directories.append(directory)
+        except requests.exceptions.RequestException as e:
+            continue
+    
+    if accessible_directories:
+        return True, f"Accessible directories: {', '.join(accessible_directories)}"
+    else:
+        return False, "No accessible directories found"
 
 
 def update_tool():
