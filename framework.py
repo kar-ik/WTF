@@ -94,13 +94,14 @@ def shodan_scan(target):
         print(colored(f"Shodan API Error: {e}", "red"))
 
 def run_tests(target):
-    """ Run security tests for the given target. """
     print(colored(f"Running security tests for {target}", "blue"))
 
     run_amass_choice = input(colored("Do you want to run Amass for subdomain enumeration? (y/n): ", "cyan")).strip().lower()
     if run_amass_choice == "y":
+        print(colored(f"Step 1: Running Amass scan for subdomains...", "yellow"))
         run_amass(target) 
-
+        
+    print(colored(f"Step 2: Scanning {target} on Shodan...", "yellow"))
     shodan_scan(target)
 
     print(colored("Running unit tests...", "blue"))
