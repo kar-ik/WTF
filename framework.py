@@ -45,18 +45,18 @@ def run_amass(domain):
     print(colored(f"Running Amass for subdomain enumeration on {domain}", "blue"))
     output_file = f"{REPORT_DIR}/amass_{domain}.txt"
 
-    subprocess.run(["amass", "enum", "-d", domain, "-o", output_file])
+    subprocess.run(["amass", "enum", "-d", domain, "-o", output_file, "-active", "-depth", "2"])
 
     with open(output_file, "r") as file:
         subdomains = [line.strip() for line in file.readlines()]
 
-    filtered_subdomains = [sub for sub in subdomains if is_valid_subdomain(sub, domain)]
+    main_subdomains = [sub for sub in subdomains if sub.count('.') == 1]
 
-    print(colored(f"Filtered {len(filtered_subdomains)} valid subdomains:", "green"))
-    for sub in filtered_subdomains:
+    print(colored(f"Filtered {len(main_subdomains)} valid main subdomains:", "green"))
+    for sub in main_subdomains:
         print(sub)
 
-    return filtered_subdomains  
+    return main_subdomains
 
 def is_in_target_range(ip, target_cidr):
     try:
