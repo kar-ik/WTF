@@ -43,14 +43,17 @@ def is_valid_subdomain(subdomain, domain):
 
 def run_amass(domain):
     print(colored(f"Running Amass for subdomain enumeration on {domain}", "blue"))
+    
+    os.makedirs(REPORT_DIR, exist_ok=True)
+    
     output_file = f"{REPORT_DIR}/amass_{domain}.txt"
-
-    subprocess.run(["amass", "enum", "-d", domain, "-o", output_file, "-active", "-depth", "2"])
+    
+    subprocess.run(["amass", "enum", "-d", domain, "-o", output_file, "-active"], check=True)
 
     with open(output_file, "r") as file:
         subdomains = [line.strip() for line in file.readlines()]
 
-    main_subdomains = [sub for sub in subdomains if sub.count('.') == 1]
+    main_subdomains = [sub for sub in subdomains if sub.count('.') == 1]  
 
     print(colored(f"Filtered {len(main_subdomains)} valid main subdomains:", "green"))
     for sub in main_subdomains:
@@ -98,10 +101,8 @@ def run_tests(target):
 
     run_amass_choice = input(colored("Do you want to run Amass for subdomain enumeration? (y/n): ", "cyan")).strip().lower()
     if run_amass_choice == "y":
-        print(colored(f"Step 1: Running Amass scan for subdomains...", "yellow"))
         run_amass(target) 
         
-    print(colored(f"Step 2: Scanning {target} on Shodan...", "yellow"))
     shodan_scan(target)
 
     print(colored("Running unit tests...", "blue"))
@@ -179,7 +180,6 @@ def directory_bruteforce(target):
 
 
 def update_tool():
-    """ Check for updates and pull the latest code if available. """
     try:
         if not os.path.exists('.git'):
             print("This tool is not a Git repository. Please clone it from the repository.")
