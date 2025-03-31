@@ -94,18 +94,24 @@ def shodan_scan(target):
         print(colored(f"Shodan API Error: {e}", "red"))
 
 def run_tests(target):
+    """ Run security tests for the given target. """
     print(colored(f"Running security tests for {target}", "blue"))
-    run_amass(target)
+
+    run_amass_choice = input(colored("Do you want to run Amass for subdomain enumeration? (y/n): ", "cyan")).strip().lower()
+    if run_amass_choice == "y":
+        run_amass(target) 
+
     shodan_scan(target)
 
     print(colored("Running unit tests...", "blue"))
     test_suite = unittest.defaultTestLoader.discover(start_dir="tests", pattern="test_cases.py")  
     test_result = unittest.TextTestRunner().run(test_suite)
+
     if test_result.wasSuccessful():
         print(colored("All tests passed!", "green"))
     else:
         print(colored(f"{len(test_result.errors)} tests failed!", "red"))
-        
+      
 def sql_injection_test(target):
     try:
         response = requests.get(target + "'")
