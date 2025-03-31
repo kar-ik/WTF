@@ -31,19 +31,16 @@ os.makedirs(REPORT_DIR, exist_ok=True)
 
 SHODAN_API_KEY = os.getenv("SHODAN_API_KEY")
 
-if not SHODAN_API_KEY:
+if SHODAN_API_KEY:
+    api = shodan.Shodan(SHODAN_API_KEY)
+    print(colored("Shodan API Key Loaded Successfully!", "green"))
+else:
     print(colored("Skipping Shodan scan (API key not provided)", "yellow"))
-    return
-
-api = shodan.Shodan(SHODAN_API_KEY)
-print(colored("Shodan API Key Loaded Successfully!", "green"))
 
 def is_valid_subdomain(subdomain, domain):
-    """ Ensure subdomains belong to the target domain. """
     return re.fullmatch(rf"[a-zA-Z0-9.-]+\.{re.escape(domain)}", subdomain)
 
 def run_amass(domain):
-    """ Run Amass for subdomain enumeration, ensuring only target subdomains are included. """
     print(colored(f"Running Amass for subdomain enumeration on {domain}", "blue"))
     output_file = f"{REPORT_DIR}/amass_{domain}.txt"
 
@@ -61,14 +58,12 @@ def run_amass(domain):
     return filtered_subdomains  
 
 def is_in_target_range(ip, target_cidr):
-    """ Check if an IP address belongs to the target's IP range. """
     try:
         return ipaddress.ip_address(ip) in ipaddress.ip_network(target_cidr)
     except ValueError:
         return False
 
 def shodan_scan(target):
-    """ Perform a Shodan scan and filter results to only show target-related data. """
     try:
         print(colored(f"Scanning {target} on Shodan...", "blue"))
         result = api.host(target)
@@ -98,7 +93,6 @@ def shodan_scan(target):
         print(colored(f"Shodan API Error: {e}", "red"))
 
 def run_tests(target):
-    """ Run all security tests on the given target. """
     print(colored(f"Running security tests for {target}", "blue"))
     run_amass(target)
     shodan_scan(target)
@@ -129,7 +123,6 @@ def update_tool():
         print(f"An error occurred during the update process: {str(e)}")
 
 def main_menu():
-    """ Display the main menu for the security testing tool. """
     while True:
         print_banner()
         print(colored("\n[+] Web Application Security Testing Framework [+]\n", "yellow"))
