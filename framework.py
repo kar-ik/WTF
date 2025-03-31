@@ -106,9 +106,9 @@ def run_tests(target):
     else:
         print(colored(f"{len(test_result.errors)} tests failed!", "red"))
         
-def sql_injection_test(url):
+def sql_injection_test(target):
     try:
-        response = requests.get(url + "'")
+        response = requests.get(target + "'")
         
         if "error in your SQL syntax" in response.text:
             return True, "SQL Injection vulnerability detected"
@@ -117,10 +117,10 @@ def sql_injection_test(url):
     except requests.exceptions.RequestException as e:
         return False, f"Request failed: {e}"
 
-def xss_test(url):
+def xss_test(target):
     payload = "<script>alert('XSS')</script>"
     try:
-        response = requests.get(url + payload)
+        response = requests.get(target + payload)
         
         if payload in response.text:
             return True, "XSS vulnerability detected"
@@ -129,9 +129,9 @@ def xss_test(url):
     except requests.exceptions.RequestException as e:
         return False, f"Request failed: {e}"
 
-def csrf_test(url):
+def csrf_test(target):
     try:
-        response = requests.get(url)
+        response = requests.get(target)
         
         if '<input type="hidden" name="csrf_token"' not in response.text:
             return True, "Potential CSRF vulnerability detected!"
@@ -140,9 +140,9 @@ def csrf_test(url):
     except requests.exceptions.RequestException as e:
         return False, f"Request failed: {e}"
 
-def insecure_headers_test(url):
+def insecure_headers_test(target):
     try:
-        response = requests.get(url)
+        response = requests.get(target)
         
         if "X-Frame-Options" not in response.headers:
             return True, "X-Frame-Options missing"
@@ -153,13 +153,13 @@ def insecure_headers_test(url):
     except requests.exceptions.RequestException as e:
         return False, f"Request failed: {e}"
 
-def directory_bruteforce(url):
+def directory_bruteforce(target):
     directories = ['/admin', '/login', '/uploads', '/config']
     accessible_directories = []
     
     for directory in directories:
         try:
-            response = requests.get(url + directory)
+            response = requests.get(target + directory)
             if response.status_code == 200:
                 accessible_directories.append(directory)
         except requests.exceptions.RequestException as e:
