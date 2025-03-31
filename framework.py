@@ -32,8 +32,8 @@ os.makedirs(REPORT_DIR, exist_ok=True)
 SHODAN_API_KEY = os.getenv("SHODAN_API_KEY")
 
 if not SHODAN_API_KEY:
-    print("Error: Shodan API key not found. Set it as an environment variable or GitHub Secret.")
-    exit(1)
+    print(colored("Skipping Shodan scan (API key not provided)", "yellow"))
+    return
 
 api = shodan.Shodan(SHODAN_API_KEY)
 print(colored("Shodan API Key Loaded Successfully!", "green"))
