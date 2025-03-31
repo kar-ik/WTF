@@ -1,11 +1,12 @@
-import sys
-import os
 import unittest
 from unittest.mock import patch
 from framework import sql_injection_test, xss_test, csrf_test, insecure_headers_test, directory_bruteforce
-class TestSecurityFramework(unittest.TestCase):
+import sys
+import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+class TestSecurityFramework(unittest.TestCase):
     
     @patch('requests.get')
     def test_sql_injection_detection(self, mock_get):
@@ -97,6 +98,3 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 if __name__ == '__main__':
     unittest.main()
-
-
-
