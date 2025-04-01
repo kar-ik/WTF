@@ -29,7 +29,7 @@ USER_AGENTS = [
 class WebCrawler(CrawlSpider):
     name = "web_crawler"
     custom_settings = {
-        "DEPTH_LIMIT": 10, 
+        "DEPTH_LIMIT": 10,
         "DEPTH_PRIORITY": 1,
         "DOWNLOAD_DELAY": random.uniform(1, 3),  
         "COOKIES_ENABLED": False,
@@ -38,12 +38,16 @@ class WebCrawler(CrawlSpider):
     }
 
     rules = (
-        Rule(LinkExtractor(), callback="parse_page", follow=True), 
+        Rule(LinkExtractor(), callback="parse_page", follow=True),  
     )
 
     def __init__(self, target_url=None, *args, **kwargs):
         super(WebCrawler, self).__init__(*args, **kwargs)
-        self.start_urls = [target_url] if target_url else ["http://example.com"]
+        
+        if not target_url.startswith(("http://", "https://")):
+            target_url = "https://" + target_url  
+
+        self.start_urls = [target_url]
 
     def parse_page(self, response):
         links = response.xpath("//a/@href").getall()
