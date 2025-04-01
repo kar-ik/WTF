@@ -107,6 +107,8 @@ def run_tests(target):
     if run_amass_choice == "y":
         run_amass(target) 
         
+    run_crawler(target)
+    
     shodan_scan(target)
 
     print(colored("Running unit tests...", "blue"))
