@@ -67,6 +67,10 @@ def is_in_target_range(ip, target_cidr):
     except ValueError:
         return False
 
+def run_crawler(target_url):
+    print(f"\n[+] Running Web Crawler on {target_url}...")
+    subprocess.run(["python", "crawler.py", target_url])
+    
 def shodan_scan(target):
     try:
         print(colored(f"Scanning {target} on Shodan...", "blue"))
