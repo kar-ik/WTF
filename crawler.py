@@ -1,18 +1,18 @@
 import os
-import subprocess
 import scrapy
 import sys
 import random
 from scrapy.crawler import CrawlerProcess
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from urllib.parse import urlparse
 
 if not os.path.exists('reports'):
     os.makedirs('reports')
 
 def save_to_file(filename, content):
-    with open(filename, 'w') as file:
-        file.write(content)
+    with open(filename, 'a') as file:
+        file.write(content + "\n")
 
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
@@ -23,29 +23,41 @@ USER_AGENTS = [
 class WebCrawler(CrawlSpider):
     name = "web_crawler"
     custom_settings = {
-        "DEPTH_LIMIT": 3,
+        "DEPTH_LIMIT": 10,  
         "DEPTH_PRIORITY": 1,
         "DOWNLOAD_DELAY": random.uniform(1, 3),  
-        "COOKIES_ENABLED": True,
+        "COOKIES_ENABLED": False,
         "USER_AGENT": random.choice(USER_AGENTS),
-        "ROBOTSTXT_OBEY": True  
+        "ROBOTSTXT_OBEY": False  
     }
 
-    rules = (
-        Rule(LinkExtractor(), callback="parse_page", follow=True),  
-    )
-
     def __init__(self, target_url=None, *args, **kwargs):
-        super(WebCrawler, self).__init__(*args, **kwargs)
-        
         if not target_url.startswith(("http://", "https://")):
             target_url = "https://" + target_url  
 
+        parsed_url = urlparse(target_url)
+        self.allowed_domains = [parsed_url.netloc]  
         self.start_urls = [target_url]
+        
+        super(WebCrawler, self).__init__(*args, **kwargs)
 
-    def parse_page(self, response):
+    rules = (
+        Rule(LinkExtractor(allow_domains=lambda domains: self.allowed_domains), callback="parse_page", follow=True),
+    )
+
+    def _compile_rules(self):
+        self.rules = (
+            Rule(LinkExtractor(allow_domains=self.allowed_domains), callback="parse_page", follow=True),
+        )
+        super()._compile_rules()
+
+def parse_page(self, response):
+    content = f"\n[*] Crawled: {response.url}\n"
+    content_type = response.headers.get("Content-Type", b"").decode("utf-8")
+    
+    if "text/html" in content_type:
         links = response.xpath("//a/@href").getall()
-        content = "\n--- Links Found ---\n"
+        content += "\n--- Links Found ---\n"
         for link in links:
             content += f"Link: {link}\n"
 
@@ -66,8 +78,10 @@ class WebCrawler(CrawlSpider):
         content += "\n--- Hidden Elements Found ---\n"
         for hidden in hidden_elements:
             content += f"Hidden field: {hidden.xpath('@name').get()}\n"
+    else:
+        content += "\nNon-HTML content, skipping parsing.\n"
 
-        save_to_file("reports/web_crawler_output.txt", content)
+    save_to_file("reports/web_crawler_output.txt", content)
 
 if __name__ == "__main__":
     target_url = sys.argv[1] if len(sys.argv) > 1 else "http://example.com"
@@ -76,4 +90,4 @@ if __name__ == "__main__":
     process.crawl(WebCrawler, target_url=target_url)
     process.start()
 
-    print("[*] All results saved in the 'reports' folder.")
+    print("[*] Crawling completed. Results saved in the 'reports' folder.")
