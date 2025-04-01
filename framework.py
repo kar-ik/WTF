@@ -96,18 +96,18 @@ def shodan_scan(target):
     except shodan.APIError as e:
         print(colored(f"Shodan API Error: {e}", "red"))
 
-def run_crawler(target):
-    print(f"\n[+] Running Web Crawler on {target}...")
-    subprocess.run(["python", "crawler.py", target])
+def run_crawler(target_url):
+    print(f"\n[+] Running Web Crawler on {target_url}...")
+    subprocess.run(["python", "crawler.py", target_url])
     
-def run_tests(target):
-    print(colored(f"Running security tests for {target}", "blue"))
+def run_tests(target_url):
+    print(colored(f"Running security tests for {target_url}", "blue"))
 
     run_amass_choice = input(colored("Do you want to run Amass for subdomain enumeration? (y/n): ", "cyan")).strip().lower()
     if run_amass_choice == "y":
         run_amass(target) 
         
-    run_crawler(target)
+    run_crawler(target_url)
     
     shodan_scan(target)
 
@@ -212,7 +212,7 @@ def main_menu():
         choice = input(colored("\nEnter your choice: ", "cyan"))
         if choice == "1":
             target_url = input(colored("Enter the target domain (e.g., example.com): ", "cyan"))
-            run_tests(target)
+            run_tests(target_url)
         elif choice == "2":
             update_tool()
             input(colored("\nPress Enter to return to the main menu...", "cyan"))
