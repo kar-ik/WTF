@@ -69,8 +69,8 @@ def is_in_target_range(ip, target_cidr):
     
 def shodan_scan(target):
     try:
-        print(colored(f"Scanning {target} on Shodan...", "blue"))
-        result = api.host(target)
+        print(colored(f"Scanning {target_url} on Shodan...", "blue"))
+        result = api.host(target_url)
 
         target_ip = result['ip_str']
         target_asn = result.get('asn', '')
@@ -85,7 +85,7 @@ def shodan_scan(target):
             print(colored(f"Skipping {target_ip} (not in target's range)", "yellow"))
             return
 
-        print(colored(f"Shodan results for {target}:", "blue"))
+        print(colored(f"Shodan results for {target_url}:", "blue"))
         print(f"IP: {target_ip}")
         print(f"Organization: {result.get('org', 'N/A')}")
         print(f"Operating System: {result.get('os', 'N/A')}")
@@ -105,11 +105,11 @@ def run_tests(target_url):
 
     run_amass_choice = input(colored("Do you want to run Amass for subdomain enumeration? (y/n): ", "cyan")).strip().lower()
     if run_amass_choice == "y":
-        run_amass(target) 
+        run_amass(target_url) 
         
     run_crawler(target_url)
     
-    shodan_scan(target)
+    shodan_scan(target_url)
 
     print(colored("Running unit tests...", "blue"))
     test_suite = unittest.defaultTestLoader.discover(start_dir="tests", pattern="test_cases.py")  
@@ -120,9 +120,9 @@ def run_tests(target_url):
     else:
         print(colored(f"{len(test_result.errors)} tests failed!", "red"))
       
-def sql_injection_test(target):
+def sql_injection_test(target_url):
     try:
-        response = requests.get(target + "'")
+        response = requests.get(target_url + "'")
         
         if "error in your SQL syntax" in response.text:
             return True, "SQL Injection vulnerability detected"
@@ -131,10 +131,10 @@ def sql_injection_test(target):
     except requests.exceptions.RequestException as e:
         return False, f"Request failed: {e}"
 
-def xss_test(target):
+def xss_test(target_url):
     payload = "<script>alert('XSS')</script>"
     try:
-        response = requests.get(target + payload)
+        response = requests.get(target_url + payload)
         
         if payload in response.text:
             return True, "XSS vulnerability detected"
@@ -143,9 +143,9 @@ def xss_test(target):
     except requests.exceptions.RequestException as e:
         return False, f"Request failed: {e}"
 
-def csrf_test(target):
+def csrf_test(target_url):
     try:
-        response = requests.get(target)
+        response = requests.get(target_url)
         
         if '<input type="hidden" name="csrf_token"' not in response.text:
             return True, "Potential CSRF vulnerability detected!"
@@ -154,9 +154,9 @@ def csrf_test(target):
     except requests.exceptions.RequestException as e:
         return False, f"Request failed: {e}"
 
-def insecure_headers_test(target):
+def insecure_headers_test(target_url):
     try:
-        response = requests.get(target)
+        response = requests.get(target_url)
         
         if "X-Frame-Options" not in response.headers:
             return True, "X-Frame-Options missing"
@@ -167,13 +167,13 @@ def insecure_headers_test(target):
     except requests.exceptions.RequestException as e:
         return False, f"Request failed: {e}"
 
-def directory_bruteforce(target):
+def directory_bruteforce(target_url):
     directories = ['/admin', '/login', '/uploads', '/config']
     accessible_directories = []
     
     for directory in directories:
         try:
-            response = requests.get(target + directory)
+            response = requests.get(target_url + directory)
             if response.status_code == 200:
                 accessible_directories.append(directory)
         except requests.exceptions.RequestException as e:
