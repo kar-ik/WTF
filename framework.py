@@ -212,7 +212,7 @@ def main_menu():
         choice = input(colored("\nEnter your choice: ", "cyan"))
         if choice == "1":
             target_url = input(colored("Enter the target domain (e.g., example.com): ", "cyan"))
-            run_tests(target_url)
+            run_tests(target)
         elif choice == "2":
             update_tool()
             input(colored("\nPress Enter to return to the main menu...", "cyan"))
