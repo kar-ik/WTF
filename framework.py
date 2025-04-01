@@ -66,10 +66,6 @@ def is_in_target_range(ip, target_cidr):
         return ipaddress.ip_address(ip) in ipaddress.ip_network(target_cidr)
     except ValueError:
         return False
-
-def run_crawler(target_url):
-    print(f"\n[+] Running Web Crawler on {target_url}...")
-    subprocess.run(["python", "crawler.py", target_url])
     
 def shodan_scan(target):
     try:
@@ -100,6 +96,10 @@ def shodan_scan(target):
     except shodan.APIError as e:
         print(colored(f"Shodan API Error: {e}", "red"))
 
+def run_crawler(target):
+    print(f"\n[+] Running Web Crawler on {target}...")
+    subprocess.run(["python", "crawler.py", target])
+    
 def run_tests(target):
     print(colored(f"Running security tests for {target}", "blue"))
 
