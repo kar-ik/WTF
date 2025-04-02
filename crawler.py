@@ -25,8 +25,10 @@ class WebCrawler(CrawlSpider):
     custom_settings = {
         "DEPTH_LIMIT": 10,  
         "DEPTH_PRIORITY": 1,
-        "DOWNLOAD_DELAY": random.uniform(1, 3),  
+        "DOWNLOAD_DELAY": 0.5,  
         "COOKIES_ENABLED": False,
+        "CONCURRENT_REQUESTS": 16,
+        "CONCURRENT_REQUESTS_PER_DOMAIN": 8,
         "USER_AGENT": random.choice(USER_AGENTS),
         "ROBOTSTXT_OBEY": False  
     }
