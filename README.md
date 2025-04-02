@@ -22,6 +22,8 @@ This Python-based framework automates the security testing of web applications f
 2. Install dependencies:
     ```bash
     apt install python3-scrapy
+    go install -v github.com/owasp-amass/amass/v4/...@master
+    cd go && mv amass /usr/bin
     ```
 
 3. Run the framework:
