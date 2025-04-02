@@ -23,7 +23,7 @@ USER_AGENTS = [
 class WebCrawler(CrawlSpider):
     name = "web_crawler"
     custom_settings = {
-        "DEPTH_LIMIT": 10,  
+        "DEPTH_LIMIT": 5,  
         "DEPTH_PRIORITY": 1,
         "DOWNLOAD_DELAY": 0.5,  
         "COOKIES_ENABLED": False,
