@@ -5,6 +5,8 @@ import subprocess
 import ipaddress
 import shodan
 import unittest
+import threading
+import time
 from bs4 import BeautifulSoup
 from termcolor import colored
 from dotenv import load_dotenv
@@ -38,18 +40,28 @@ else:
     print(colored("Skipping Shodan scan (API key not provided)", "yellow"))
     exit(1)    
 
-def is_valid_subdomain(subdomain, domain):
-    return re.fullmatch(rf"[a-zA-Z0-9.-]+\.{re.escape(domain)}", subdomain)
 
-def run_amass(domain):
+def is_valid_subdomain(subdomain, domain):
+    return re.fullmatch(rf"[a-zA-Z0-9.-]+\\.{re.escape(domain)}", subdomain)
+
+def run_amass(domain, timeout=300):
     print(colored(f"Running Amass for subdomain enumeration on {domain}", "blue"))
     
     os.makedirs(REPORT_DIR, exist_ok=True)
     
     output_file = f"{REPORT_DIR}/amass_{domain}.txt"
     
-    subprocess.run(["amass", "enum", "-d", domain, "-o", output_file, "-active"], check=True)
-
+    def execute_amass():
+        subprocess.run(["amass", "enum", "-d", domain, "-o", output_file, "-active"], check=True)
+    
+    amass_thread = threading.Thread(target=execute_amass)
+    amass_thread.start()
+    amass_thread.join(timeout)
+    
+    if amass_thread.is_alive():
+        print(colored("Amass scan timed out!", "red"))
+        return []
+    
     with open(output_file, "r") as file:
         subdomains = [line.strip() for line in file.readlines()]
 
