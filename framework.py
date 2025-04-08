@@ -289,7 +289,9 @@ def run_tests(target):
         return
     
     print(colored(f"\n[+] Starting tests on {target}", "yellow"))
-    
+
+    shodan_lookup(domain)
+
     subdomains = run_sublist3r(target)
     
     run_crawler(target)
