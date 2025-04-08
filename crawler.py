@@ -2,18 +2,16 @@ import os
 import scrapy
 import sys
 import random
-from scrapy.crawler import CrawlerProcess
+import json
+from urllib.parse import urlparse
+from scrapy.crawler import CrawlerProcess, CrawlerRunner
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-from urllib.parse import urlparse
+from twisted.internet import reactor, defer
 
 REPORTS_DIR = "reports"
 if not os.path.exists(REPORTS_DIR):
     os.makedirs(REPORTS_DIR)
-
-def save_to_file(filename, content):
-    with open(os.path.join(REPORTS_DIR, filename), 'a') as file:
-        file.write(content + "\n")
 
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
@@ -34,16 +32,17 @@ class WebCrawler(CrawlSpider):
         "ROBOTSTXT_OBEY": False,
     }
 
-    def __init__(self, target_url=None, *args, **kwargs):
+    def __init__(self, target_url=None, report_filename="crawl_report.json", *args, **kwargs):
         if not target_url.startswith(("http://", "https://")):
             target_url = "https://" + target_url
 
         parsed_url = urlparse(target_url)
         self.allowed_domains = [parsed_url.netloc]
         self.start_urls = [target_url]
-
+        self.report_filename = report_filename
+        self.results = []  
         super(WebCrawler, self).__init__(*args, **kwargs)
-        self._compile_rules() 
+        self._compile_rules()
 
     def _compile_rules(self):
         self.rules = (
@@ -52,42 +51,66 @@ class WebCrawler(CrawlSpider):
         super()._compile_rules()
 
     def parse_page(self, response):
-        content = f"\n[*] Crawled: {response.url}\n"
+        page_data = {}
+        page_data["url"] = response.url
         content_type = response.headers.get("Content-Type", b"").decode("utf-8")
-
+        page_data["content_type"] = content_type
         if "text/html" in content_type:
             links = response.xpath("//a/@href").getall()
-            content += "\n--- Links Found ---\n"
-            for link in links:
-                content += f"Link: {link}\n"
+            page_data["links"] = links
 
-            forms = response.xpath("//form")
-            content += "\n--- Forms Found ---\n"
-            for form in forms:
-                action = form.xpath("@action").get()
-                method = form.xpath("@method").get()
-                content += f"Form action: {action}, method: {method}\n"
+            forms = []
+            for form in response.xpath("//form"):
+                form_info = {
+                    "action": form.xpath("@action").get(),
+                    "method": form.xpath("@method").get(),
+                    "inputs": []
+                }
+                for input_field in form.xpath(".//input"):
+                    form_info["inputs"].append({
+                        "name": input_field.xpath("@name").get(),
+                        "type": input_field.xpath("@type").get()
+                    })
+                forms.append(form_info)
+            page_data["forms"] = forms
 
-                inputs = form.xpath(".//input")
-                for input_field in inputs:
-                    input_name = input_field.xpath("@name").get()
-                    input_type = input_field.xpath("@type").get()
-                    content += f"Input name: {input_name}, type: {input_type}\n"
-
-            hidden_elements = response.xpath("//input[@type='hidden']")
-            content += "\n--- Hidden Elements Found ---\n"
-            for hidden in hidden_elements:
-                content += f"Hidden field: {hidden.xpath('@name').get()}\n"
+            hidden_elements = response.xpath("//input[@type='hidden']/@name").getall()
+            page_data["hidden_elements"] = hidden_elements
         else:
-            content += "\nNon-HTML content, skipping parsing.\n"
+            page_data["non_html"] = True
+        self.results.append(page_data)
 
-        save_to_file("web_crawler_output.txt", content)
+    def closed(self, reason):
+        report_path = os.path.join(REPORTS_DIR, self.report_filename)
+        with open(report_path, "w") as f:
+            json.dump(self.results, f, indent=4)
+        self.logger.info(f"Crawl finished. Report saved to {report_path}")
+
+def run_crawler_for_target(target_url):
+    process = CrawlerProcess()
+    parsed = urlparse(target_url)
+    domain = parsed.netloc
+    report_filename = f"crawl_{domain.replace(':', '_')}.json"
+    process.crawl(WebCrawler, target_url=target_url, report_filename=report_filename)
+    process.start()
+    print(f"[*] Crawling completed for {target_url}. Report saved in {REPORTS_DIR}/{report_filename}")
+
+def run_crawler_for_targets(target_urls):
+    runner = CrawlerRunner()
+    
+    @defer.inlineCallbacks
+    def crawl():
+        deferreds = []
+        for target_url in target_urls:
+            parsed = urlparse(target_url)
+            domain = parsed.netloc
+            report_filename = f"crawl_{domain.replace(':', '_')}.json"
+            deferreds.append(runner.crawl(WebCrawler, target_url=target_url, report_filename=report_filename))
+        yield defer.DeferredList(deferreds)
+        reactor.stop()
+    crawl()
+    reactor.run()
 
 if __name__ == "__main__":
     target_url = sys.argv[1] if len(sys.argv) > 1 else "http://example.com"
-
-    process = CrawlerProcess()
-    process.crawl(WebCrawler, target_url=target_url)
-    process.start()
-
-    print("[*] Crawling completed. Results saved in the 'reports' folder.")
+    run_crawler_for_target(target_url)
