@@ -60,7 +60,7 @@ SECURITY_HEADERS = {
     "Strict-Transport-Security": "Missing"
 }
 
-def shodan_lookup(domain, SHODAN_API_KEY):
+def shodan_lookup(domain):
     try:
         ip = socket.gethostbyname(domain)
         print(f"[+] Resolved {domain} to {ip}")
